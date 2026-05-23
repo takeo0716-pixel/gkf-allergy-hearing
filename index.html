@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>GKF アレルギーヒアリング</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#FAF8F5;--card:#fff;--hdr:#1B2A4A;--gold:#B8962E;--accent:#4A7C9B;--ng:#C0392B;--ok:#27AE60;--border:#E0DCD5;--text:#2E2E2E;--sub:#888;--radius:12px}
+body{font-family:'Hiragino Kaku Gothic ProN','Yu Gothic UI',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;padding-bottom:180px;-webkit-tap-highlight-color:transparent}
+header{background:var(--hdr);color:#fff;padding:16px 20px 12px;position:sticky;top:0;z-index:100}
+header h1{font-size:17px;font-weight:700;letter-spacing:1px}
+header small{color:var(--gold);font-size:11px}
+.badge{float:right;border:1px solid var(--gold);color:var(--gold);font-size:11px;padding:2px 10px;border-radius:4px;margin-top:-20px}
+
+.section{margin:12px 12px 0;background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.section-title{font-size:13px;color:var(--sub);margin-bottom:10px;font-weight:600}
+.section-title .req{color:var(--ng);font-size:11px;margin-left:4px}
+
+/* Button group */
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+.btn-group button{flex:1;min-width:70px;padding:10px 4px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;transition:.2s}
+.btn-group button.active{border-color:var(--gold);background:linear-gradient(135deg,#FDF6E3,#F5EBCC);font-weight:700;color:var(--hdr)}
+
+/* Input */
+.input-row{display:flex;gap:8px;margin-top:8px}
+.input-row input,.input-row select{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:#fff;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--gold)}
+
+/* Toggle (OK/NG) */
+.toggle-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f0ede8}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{flex:1;font-size:13px;line-height:1.4}
+.toggle-label .hint{display:block;font-size:11px;color:var(--sub);margin-top:2px}
+.toggle-btns{display:flex;gap:4px;flex-shrink:0}
+.toggle-btns button{width:42px;height:32px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;background:#fff;transition:.2s}
+.toggle-btns button.ok-active{background:var(--ok);color:#fff;border-color:var(--ok)}
+.toggle-btns button.ng-active{background:var(--ng);color:#fff;border-color:var(--ng)}
+.toggle-btns button.na-active{background:#888;color:#fff;border-color:#888}
+
+/* Category card */
+.cat-card{margin:12px 12px 0;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.cat-header{display:flex;align-items:center;padding:14px 16px;cursor:pointer;gap:10px;user-select:none}
+.cat-num{width:28px;height:28px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.cat-name{flex:1;font-size:14px;font-weight:600}
+.cat-status{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600}
+.cat-status.has-ng{background:#FDECEA;color:var(--ng)}
+.cat-status.all-ok{background:#E8F5E9;color:var(--ok)}
+.cat-status.empty{background:#f0f0f0;color:#aaa}
+.cat-arrow{font-size:16px;color:var(--sub);transition:.3s;flex-shrink:0}
+.cat-card.open .cat-arrow{transform:rotate(180deg)}
+.cat-body{display:none;padding:0 16px 12px;border-top:1px solid #f0ede8}
+.cat-card.open .cat-body{display:block}
+.cat-note{font-size:11px;color:var(--accent);background:#EDF4F8;padding:8px 10px;border-radius:6px;margin:10px 0 6px;line-height:1.5}
+
+/* Free text */
+textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px}
+textarea:focus{outline:none;border-color:var(--gold)}
+
+/* Bottom bar */
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);padding:8px 12px 20px;z-index:100}
+.summary-row{display:flex;gap:8px;margin-bottom:8px}
+.summary-box{flex:1;text-align:center;padding:8px;background:#FDF6E3;border-radius:8px}
+.summary-box .num{font-size:20px;font-weight:700;color:var(--hdr)}
+.summary-box .lbl{font-size:10px;color:var(--sub)}
+.copy-btns{display:flex;gap:8px}
+.copy-btns button{flex:1;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-copy{background:var(--hdr);color:#fff}
+.btn-copy:active{background:#0d1a30}
+.btn-line{background:var(--ok);color:#fff}
+.btn-line:active{background:#1e8b4e}
+.btn-reset{background:#eee;color:var(--text);font-size:12px;padding:8px}
+
+/* Toast */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--hdr);color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:200}
+.toast.show{opacity:1}
+
+/* Warning banner */
+.warn{margin:12px;padding:10px 14px;background:#FDECEA;border-left:4px solid var(--ng);border-radius:0 8px 8px 0;font-size:12px;color:var(--ng);line-height:1.5}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GKF アレルギーヒアリング</h1>
+  <small>Vector Partners</small>
+  <div class="badge">強羅花壇富士</div>
+</header>
+
+<div class="warn">
+  <strong>禁句ルール：</strong>「苦手」という言葉は使用禁止。<br>
+  → 「お召し上がりにならない食材はございますか」に統一。
+</div>
+
+<!-- ===== 基本情報 ===== -->
+<div class="section">
+  <div class="section-title">担当セクション<span class="req">*</span></div>
+  <div class="btn-group" id="roleGroup">
+    <button onclick="sel(this,'roleGroup')">フロント</button>
+    <button onclick="sel(this,'roleGroup')">客室係</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">担当者名<span class="req">*</span></div>
+  <div class="input-row"><input type="text" id="staffName" placeholder="担当者名を入力"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">ゲスト情報<span class="req">*</span></div>
+  <div class="input-row">
+    <input type="text" id="guestName" placeholder="ゲスト名">
+    <input type="text" id="roomNum" placeholder="部屋番号" style="max-width:100px">
+  </div>
+  <div class="input-row">
+    <input type="date" id="dateField">
+    <select id="paxCount">
+      <option value="">人数</option>
+      <option>1名</option><option>2名</option><option>3名</option><option>4名</option><option>5名</option><option>6名</option>
+    </select>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">申告タイミング</div>
+  <div class="btn-group" id="timingGroup">
+    <button onclick="sel(this,'timingGroup')">予約時・事前</button>
+    <button onclick="sel(this,'timingGroup')">当日チェックイン</button>
+    <button onclick="sel(this,'timingGroup')">当日ダイニング</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">対応区分<span class="req">*</span></div>
+  <div class="btn-group" id="typeGroup">
+    <button onclick="sel(this,'typeGroup')" style="border-color:var(--ng);color:var(--ng)">アレルギー</button>
+    <button onclick="sel(this,'typeGroup')">お召し上がりにならない食材</button>
+    <button onclick="sel(this,'typeGroup')">食事制限</button>
+  </div>
+</div>
+
+<!-- ===== カテゴリ別ヒアリング ===== -->
+<div id="categories"></div>
+
+<!-- ===== 追加メモ ===== -->
+<div class="section" style="margin-top:12px">
+  <div class="section-title">追加メモ・特記事項</div>
+  <textarea id="memo" placeholder="調理場への伝達事項、ゲストの言葉そのままの記録など"></textarea>
+</div>
+
+<!-- ===== 復唱確認 ===== -->
+<div class="section">
+  <div class="section-title">復唱確認</div>
+  <div class="btn-group" id="confirmGroup">
+    <button onclick="sel(this,'confirmGroup')" style="border-color:var(--ok)">ゲストに復唱済み</button>
+    <button onclick="sel(this,'confirmGroup')">未復唱</button>
+  </div>
+</div>
+
+<!-- ===== Bottom bar ===== -->
+<div class="bottom-bar">
+  <div class="summary-row">
+    <div class="summary-box"><div class="num" id="ngCount">0</div><div class="lbl">NG項目</div></div>
+    <div class="summary-box"><div class="num" id="okCount">0</div><div class="lbl">OK項盞</div></div>
+    <div class="summary-box"><div class="num" id="totalCount">0</div><div class="lbl">確認済み</div></div>
+  </div>
+  <div class="copy-btns">
+    <button class="btn-copy" onclick="copyResult()">結果をコピー</button>
+    <button class="btn-line" onclick="copyForLine()">LINE用コピー</button>
+  </div>
+  <div class="copy-btns" style="margin-top:6px">
+    <button class="btn-reset" onclick="resetAll()">リセット</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Data: categories + items (from Excel confirmation table + diagnostic tables) =====
+const CATS = [
+  {
+    name: "魚・シーフード（診断テーブルA）",
+    note: "「魚NG」でも出汁・エキスはOKの場合あり。必ず深掘りな確認。",
+    items: [
+      {label:"魚介類（魚全般）", hint:"Fish in general"},
+      {label:"甲殻類（海老・蟻・ロブスター）", hint:"Crustaceans: shrimp, crab, lobster"},
+      {label:"貝類（貝・鮑）", hint:"Shellfish, abalone"},
+      {label:"イカ・タコ", hint:"Squid, octopus"},
+      {label:"雲丹（ウニ）", hint:"Sea urchin"},
+      {label:"海藻類", hint:"Seaweed"},
+      {label:"魚出汁（かつお出汁）", hint:"Fish-based dashi (bonito)"},
+      {label:"昆布出汁", hint:"Kelp dashi"},
+      {label:"エキス類（魚醤等）", hint:"Fish extracts, fish sauce"},
+    ]
+  },
+  {
+    name: "肉類",
+    note: "豚肉NGの場合はハラール対応の可能性。料理酒・鄣油・酥の可否も確認。",
+    items: [
+      {label:"牛肉", hint:"Beef"},
+      {label:"豚肉", hint:"Pork"},
+      {label:"鶏肉", hint:"Chicken"},
+      {label:"鴥・ジビエ（野生肉）", hint:"Duck, game meat"},
+      {label:"ハラール対応の必要", hint:"Halal requirements"},
+    ]
+  },
+  {
+    name: "卵・乳製品",
+    note: "ベジタリアンの場合、卵・乳製品・はちみつの可否を必ず確認。",
+    items: [
+      {label:"卵", hint:"Eggs"},
+      {label:"乳製品（牛乳・バター・チーズ）", hint:"Dairy: milk, butter, cheese"},
+      {label:"はちみつ", hint:"Honey"},
+    ]
+  },
+  {
+    name: "ナッツ・香辛料（診断テーブルC）",
+    note: "「木の実アレルギー」ではなく「ナッツ類アレルギー」で統一してヒアリング。",
+    items: [
+      {label:"ナッツ類全般", hint:"Tree nuts in general"},
+      {label:"ピーナッツ（落花生）", hint:"Peanuts"},
+      {label:"ゴマ", hint:"Sesame"},
+      {label:"山椒", hint:"Japanese pepper (sansho)"},
+      {label:"白コショウ・黒コショウ", hint:"White / black pepper"},
+    ]
+  },
+  {
+    name: "発酵食品（診断テーブルB）",
+    note: "和食の基本調味料（醤油・味噌・料理酒・酢）が共通のNGリスク。",
+    items: [
+      {label:"味噌", hint:"Miso"},
+      {label:"醤油", hint:"Soy sauce"},
+      {label:"酢", hint:"Vinegar"},
+      {label:"みりん", hint:"Mirin"},
+      {label:"料理酒", hint:"Cooking sake"},
+      {label:"ヨーグルト・チーズ", hint:"Yogurt, cheese"},
+      {label:"パン（酵母）", hint:"Bread (yeast)"},
+      {label:"納豆", hint:"Natto"},
+      {label:"漬物", hint:"Pickles"},
+    ]
+  },
+  {
+    name: "果物（診断テーブルC）",
+    note: "バラ科（リンゴ・モモ等）は口腔アレルギー症候群との関連あり。",
+    items: [
+      {label:"バラ科（リンゴ・モモ・ナシ・サクランボ・イチゴ）", hint:"Rosaceae: apple, peach, pear, cherry, strawberry"},
+      {label:"ウリ科（メロン・スイカ）", hint:"Cucurbitaceae: melon, watermelon"},
+      {label:"バナナ", hint:"Banana"},
+      {label:"キウイフルーツ", hint:"Kiwi fruit"},
+      {label:"柑橘類", hint:"Citrus fruits"},
+    ]
+  },
+  {
+    name: "アルコール（診断テーブルC）",
+    note: "料理酒・醤油・酢にもアルコール成分あり。加熱済みアルコールの可否を確認。",
+    items: [
+      {label:"飲料アルコール全般", hint:"Alcoholic beverages"},
+      {label:"料理酒（加熱済み）", hint:"Cooking sake (heated)"},
+      {label:"鄤油・酢（発酵アルコール）", hint:"Soy sauce, vinegar (fermented)"},
+    ]
+  },
+  {
+    name: "食事制限・ライフスタイル（診断テーブルB）",
+    note: "「ベジタリアン」の一言では不十分。卵・乳・出汁・はちみつまで深掘り。",
+    items: [
+      {label:"ベジタリアン", hint:"Vegetarian"},
+      {label:"ヴィーガン", hint:"Vegan"},
+      {label:"ペスカタリアン", hint:"Pescatarian"},
+      {label:"グルテンフリー", hint:"Gluten-free"},
+      {label:"コンタミネーション配慮", hint:"Cross-contamination concerns"},
+    ]
+  },
+  {
+    name: "小麦・グルテン",
+    note: "醤油・味噌にも小麦由来成分あり。コンタミネーションの確認必須。",
+    items: [
+      {label:"小麦", hint:"Wheat"},
+      {label:"大麦", hint:"Barley"},
+      {label:"鄤油（小麦由来）", hint:"Soy sauce (wheat-derived)"},
+      {label:"味噌（麦味噌等）", hint:"Miso (barley-based)"},
+    ]
+  },
+  {
+    name: "その他",
+    note: "",
+    items: [
+      {label:"大豆", hint:"Soybeans"},
+      {label:"そば", hint:"Buckwheat (soba)"},
+      {label:"特定の野菜", hint:"Specific vegetables"},
+      {label:"その他（自由記入）", hint:"Other (free text)"},
+    ]
+  },
+];
+
+// ===== Render categories =====
+const catEl = document.getElementById('categories');
+CATS.forEach((cat, ci) => {
+  let itemsHtml = cat.items.map((item, ii) => `
+    <div class="toggle-row">
+      <div class="toggle-label">${item.label}<span class="hint">${item.hint}</span></div>
+      <div class="toggle-btns">
+        <button onclick="toggle(this,'ok',${ci},${ii})">OK</button>
+        <button onclick="toggle(this,'ng',${ci},${ii})">NG</button>
+      </div>
+    </div>
+  `).join('');
+
+  catEl.innerHTML += `
+    <div class="cat-card" id="cat${ci}">
+      <div class="cat-header" onclick="toggleCat(${ci})">
+        <div class="cat-num">${ci+1}</div>
+        <div class="cat-name">${cat.name}</div>
+        <div class="cat-status empty" id="catSt${ci}">未確認</div>
+        <div class="cat-arrow">▼</div>
+      </div>
+      <div class="cat-body">
+        ${cat.note ? `<div class="cat-note">⚠ ${cat.note}</div>` : ''}
+        ${itemsHtml}
+      </div>
+    </div>
+  `;
+});
+
+// ===== State =====
+const state = {};
+CATS.forEach((cat, ci) => {
+  state[ci] = {};
+  cat.items.forEach((_, ii) => { state[ci][ii] = null; });
+});
+
+function sel(btn, groupId) {
+  document.querySelectorAll(`#${groupId} button`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleCat(ci) {
+  document.getElementById(`cat${ci}`).classList.toggle('open');
+}
+
+function toggle(btn, type, ci, ii) {
+  const btns = btn.parentElement.querySelectorAll('button');
+  const wasActive = btn.classList.contains(type + '-active');
+  btns.forEach(b => { b.className = ''; });
+  if (!wasActive) {
+    btn.classList.add(type + '-active');
+    state[ci][ii] = type;
+  } else {
+    state[ci][ii] = null;
+  }
+  updateCounts();
+  updateCatStatus(ci);
+}
+
+function updateCatStatus(ci) {
+  const items = state[ci];
+  const vals = Object.values(items);
+  const answered = vals.filter(v => v !== null);
+  const ngs = vals.filter(v => v === 'ng');
+  const el = document.getElementById(`catSt${ci}`);
+
+  if (answered.length === 0) {
+    el.className = 'cat-status empty'; el.textContent = '未確認';
+  } else if (ngs.length > 0) {
+    el.className = 'cat-status has-ng'; el.textContent = `NG: ${ngs.length}件`;
+  } else {
+    el.className = 'cat-status all-ok'; el.textContent = '全てOK';
+  }
+}
+
+function updateCounts() {
+  let ng = 0, ok = 0, total = 0;
+  Object.values(state).forEach(cat => {
+    Object.values(cat).forEach(v => {
+      if (v === 'ng') { ng++; total++; }
+      else if (v === 'ok') { ok++; total++; }
+    });
+  });
+  document.getElementById('ngCount').textContent = ng;
+  document.getElementById('okCount').textContent = ok;
+  document.getElementById('totalCount').textContent = total;
+}
+
+// ===== Build result text =====
+function buildResult(forLine) {
+  const role = document.querySelector('#roleGroup .active')?.textContent || '未選択';
+  const staff = document.getElementById('staffName').value || '未入力';
+  const guest = document.getElementById('guestName').value || '未入力';
+  const room = document.getElementById('roomNum').value || '-';
+  const date = document.getElementById('dateField').value || '-';
+  const pax = document.getElementById('paxCount').value || '-';
+  const timing = document.querySelector('#timingGroup .active')?.textContent || '-';
+  const type = document.querySelector('#typeGroup .active')?.textContent || '-';
+  const confirm = document.querySelector('#confirmGroup .active')?.textContent || '未復唱';
+  const memo = document.getElementById('memo').value;
+
+  let ngItems = [];
+  let okCats = [];
+
+  CATS.forEach((cat, ci) => {
+    let catNgs = [];
+    let allOk = true;
+    let anyAnswered = false;
+    cat.items.forEach((item, ii) => {
+      if (state[ci][ii] === 'ng') { catNgs.push(item.label); anyAnswered = true; }
+      else if (state[ci][ii] === 'ok') { anyAnswered = true; }
+      else { allOk = false; }
+    });
+    if (catNgs.length > 0) {
+      ngItems.push({ cat: cat.name.replace(/（.*）/, ''), items: catNgs });
+    }
+    if (anyAnswered && catNgs.length === 0) {
+      okCats.push(cat.name.replace(/（.*）/, ''));
+    }
+  });
+
+  if (forLine) {
+    // Short format for LINE
+    let lines = [];
+    lines.push(`【${type === 'アレルギー' ? '🚨アレルギー' : '📋食事要望'}】`);
+    lines.push(`${guest}様｜${room}号室｜${pax}`);
+    lines.push(`担当: ${role} ${staff}｜${timing}`);
+    lines.push('');
+    if (ngItems.length > 0) {
+      lines.push('■ NG食材');
+      ngItems.forEach(ng => {
+        lines.push(`・${ng.cat}: ${ng.items.join('、')}`);
+      });
+    } else {
+      lines.push('■ NG食材: なし');
+    }
+    if (memo) { lines.push(''); lines.push(`■ 備考: ${memo}`); }
+    lines.push('');
+    lines.push(`復唱: ${confirm}`);
+    lines.push(`日時: ${date}`);
+    return lines.join('\n');
+  } else {
+    // Full format
+    let lines = [];
+    lines.push('═══════════════════════');
+    lines.push('GKF アレルギー・食事要望 確認記録');
+    lines.push('═══════════════════════');
+    lines.push(`日付: ${date}`);
+    lines.push(`ゲスト: ${guest}様｜${room}号室｜${pax}`);
+    lines.push(`担当: ${role} ${staff}`);
+    lines.push(`申告タイミング: ${timing}`);
+    lines.push(`対応区分: ${type}`);
+    lines.push('───────────────────────');
+
+    if (ngItems.length > 0) {
+      lines.push('【NG食材一覧】');
+      ngItems.forEach(ng => {
+        lines.push(`  ${ng.cat}:`);
+        ng.items.forEach(i => lines.push(`    ✕ ${i}`));
+      });
+    } else {
+      lines.push('【NG食材】なし');
+    }
+
+    if (okCats.length > 0) {
+      lines.push('');
+      lines.push(`【OK確認済み】${okCats.join('、')}`);
+    }
+
+    if (memo) { lines.push(''); lines.push(`【備考】${memo}`); }
+    lines.push('───────────────────────');
+    lines.push(`復唱確認: ${confirm}`);
+    lines.push('═══════════════════════');
+    return lines.join('\n');
+  }
+}
+
+function copyResult() {
+  const text = buildResult(false);
+  navigator.clipboard.writeText(text).then(() => showToast('結果をコピーしました'));
+}
+
+function copyForLine() {
+  const text = buildResult(true);
+  navigator.clipboard.writeText(text).then(() => showToast('LINE用にコピーしました'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function resetAll() {
+  if (!confirm('全ての入力をリセットしますか？')) return;
+  document.querySelectorAll('.btn-group button, .toggle-btns button').forEach(b => b.className = '');
+  document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+  document.getElementById('paxCount').value = '';
+  CATS.forEach((_, ci) => {
+    CATS[ci].items.forEach((_, ii) => { state[ci][ii] = null; });
+    updateCatStatus(ci);
+  });
+  updateCounts();
+  window.scrollTo(0, 0);
+  showToast('リセットしました');
+}
+
+// Init
+document.getElementById('dateField').valueAsDate = new Date();
+</script>
+</body>
+</html>
